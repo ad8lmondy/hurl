@@ -556,7 +556,7 @@ pub struct File {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Template {
-    pub quotes: bool,
+    pub delimiter: Option<char>,
     pub elements: Vec<TemplateElement>,
     pub source_info: SourceInfo,
 }
@@ -624,8 +624,8 @@ pub struct LineTerminator {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Bytes {
-    Json { value: json::Value },
-    Xml { value: String },
+    Json(json::Value),
+    Xml(String),
     MultilineString(MultilineString),
     Base64(Base64),
     File(File),
@@ -877,5 +877,7 @@ pub enum FilterValue {
     },
     UrlEncode {},
     UrlDecode {},
+    HtmlEscape {},
+    HtmlUnescape {},
     ToInt {},
 }

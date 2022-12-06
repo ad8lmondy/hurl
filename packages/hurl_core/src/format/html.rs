@@ -930,9 +930,9 @@ impl Htmlable for Bytes {
             Bytes::Base64(value) => format!("<span class=\"line\">{}</span>", value.to_html()),
             Bytes::File(value) => format!("<span class=\"line\">{}</span>", value.to_html()),
             Bytes::Hex(value) => format!("<span class=\"line\">{}</span>", value.to_html()),
-            Bytes::Json { value } => value.to_html(),
+            Bytes::Json(value) => value.to_html(),
             Bytes::MultilineString(value) => value.to_html(),
-            Bytes::Xml { value } => xml_html(value),
+            Bytes::Xml(value) => xml_html(value),
         }
     }
 }
@@ -1083,6 +1083,12 @@ impl Htmlable for FilterValue {
             }
             FilterValue::UrlEncode {} => "<span class=\"filter-type\">urlEncode</span>".to_string(),
             FilterValue::UrlDecode {} => "<span class=\"filter-type\">urlDecode</span>".to_string(),
+            FilterValue::HtmlEscape {} => {
+                "<span class=\"filter-type\">htmlEscape</span>".to_string()
+            }
+            FilterValue::HtmlUnescape {} => {
+                "<span class=\"filter-type\">htmlUnescape</span>".to_string()
+            }
             FilterValue::ToInt {} => "<span class=\"filter-type\">toInt</span>".to_string(),
         }
     }
@@ -1120,7 +1126,7 @@ mod tests {
     fn test_multiline_string() {
         // ``````
         let multiline_string = MultilineString::OneLineText(Template {
-            quotes: false,
+            delimiter: None,
             elements: vec![TemplateElement::String {
                 value: "".to_string(),
                 encoded: "unused".to_string(),
@@ -1134,7 +1140,7 @@ mod tests {
 
         // ```hello```
         let multiline_string = MultilineString::OneLineText(Template {
-            quotes: false,
+            delimiter: None,
             elements: vec![TemplateElement::String {
                 value: "hello".to_string(),
                 encoded: "unused".to_string(),
@@ -1166,7 +1172,7 @@ mod tests {
                 },
             },
             value: Template {
-                quotes: false,
+                delimiter: None,
                 elements: vec![TemplateElement::String {
                     value: "line1\nline2\n".to_string(),
                     encoded: "unused".to_string(),
@@ -1204,7 +1210,7 @@ mod tests {
             elements: vec![JsonObjectElement {
                 space0: "\n   ".to_string(),
                 name: Template {
-                    quotes: true,
+                    delimiter: Some('"'),
                     elements: vec![TemplateElement::String {
                         value: "id".to_string(),
                         encoded: "id".to_string(),
@@ -1226,7 +1232,7 @@ mod tests {
     #[test]
     fn test_json_encoded_newline() {
         let value = JsonValue::String(Template {
-            quotes: true,
+            delimiter: Some('"'),
             elements: vec![TemplateElement::String {
                 value: "\n".to_string(),
                 encoded: "\\n".to_string(),

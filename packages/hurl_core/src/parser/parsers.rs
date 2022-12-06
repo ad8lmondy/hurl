@@ -227,7 +227,7 @@ fn status(reader: &mut Reader) -> ParseResult<'static, Status> {
                     pos: start,
                     recoverable: false,
                     inner: ParseError::Status {},
-                })
+                });
             }
         },
     };
@@ -328,7 +328,7 @@ mod tests {
                     value: String::from("http://google.fr"),
                     encoded: String::from("http://google.fr"),
                 }],
-                quotes: false,
+                delimiter: None,
                 source_info: SourceInfo::new(1, 5, 1, 21),
             },
             line_terminator0: LineTerminator {
@@ -366,7 +366,7 @@ mod tests {
                     value: String::from("http://google.fr"),
                     encoded: String::from("http://google.fr"),
                 }],
-                quotes: false,
+                delimiter: None,
                 source_info: SourceInfo::new(1, 6, 1, 22),
             },
             line_terminator0: LineTerminator {
@@ -427,9 +427,9 @@ mod tests {
                             value: String::from("Hello World!\n"),
                             encoded: String::from("Hello World!\n"),
                         }],
-                        quotes: false,
+                        delimiter: None,
                         source_info: SourceInfo::new(3, 1, 4, 1),
-                    }
+                    },
                 })),
                 line_terminator0: LineTerminator {
                     space0: Whitespace {
@@ -453,28 +453,26 @@ mod tests {
         assert_eq!(r.method, Method::Post);
         assert_eq!(
             r.body.unwrap().value,
-            Bytes::Json {
-                value: JsonValue::List {
-                    space0: "".to_string(),
-                    elements: vec![
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("1".to_string()),
-                            space1: "".to_string(),
-                        },
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("2".to_string()),
-                            space1: "".to_string(),
-                        },
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("3".to_string()),
-                            space1: "".to_string(),
-                        },
-                    ],
-                }
-            }
+            Bytes::Json(JsonValue::List {
+                space0: "".to_string(),
+                elements: vec![
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("1".to_string()),
+                        space1: "".to_string(),
+                    },
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("2".to_string()),
+                        space1: "".to_string(),
+                    },
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("3".to_string()),
+                        space1: "".to_string(),
+                    },
+                ],
+            })
         );
 
         let mut reader = Reader::init("POST http://localhost:8000/post-json-string\n\"Hello\"");
@@ -482,16 +480,14 @@ mod tests {
         assert_eq!(r.method, Method::Post);
         assert_eq!(
             r.body.unwrap().value,
-            Bytes::Json {
-                value: JsonValue::String(Template {
-                    quotes: true,
-                    elements: vec![TemplateElement::String {
-                        value: "Hello".to_string(),
-                        encoded: "Hello".to_string(),
-                    }],
-                    source_info: SourceInfo::new(2, 2, 2, 7),
-                })
-            }
+            Bytes::Json(JsonValue::String(Template {
+                delimiter: Some('"'),
+                elements: vec![TemplateElement::String {
+                    value: "Hello".to_string(),
+                    encoded: "Hello".to_string(),
+                }],
+                source_info: SourceInfo::new(2, 2, 2, 7),
+            }))
         );
 
         let mut reader = Reader::init("POST http://localhost:8000/post-json-number\n100");
@@ -499,9 +495,7 @@ mod tests {
         assert_eq!(r.method, Method::Post);
         assert_eq!(
             r.body.unwrap().value,
-            Bytes::Json {
-                value: JsonValue::Number("100".to_string())
-            }
+            Bytes::Json(JsonValue::Number("100".to_string()))
         );
     }
 
@@ -571,28 +565,26 @@ mod tests {
         assert_eq!(b.line_terminators.len(), 0);
         assert_eq!(
             b.value,
-            Bytes::Json {
-                value: JsonValue::List {
-                    space0: "".to_string(),
-                    elements: vec![
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("1".to_string()),
-                            space1: "".to_string(),
-                        },
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("2".to_string()),
-                            space1: "".to_string(),
-                        },
-                        JsonListElement {
-                            space0: "".to_string(),
-                            value: JsonValue::Number("3".to_string()),
-                            space1: "".to_string(),
-                        },
-                    ],
-                }
-            }
+            Bytes::Json(JsonValue::List {
+                space0: "".to_string(),
+                elements: vec![
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("1".to_string()),
+                        space1: "".to_string(),
+                    },
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("2".to_string()),
+                        space1: "".to_string(),
+                    },
+                    JsonListElement {
+                        space0: "".to_string(),
+                        value: JsonValue::Number("3".to_string()),
+                        space1: "".to_string(),
+                    },
+                ],
+            })
         );
         assert_eq!(reader.state.cursor, 8);
 
@@ -601,12 +593,10 @@ mod tests {
         assert_eq!(b.line_terminators.len(), 0);
         assert_eq!(
             b.value,
-            Bytes::Json {
-                value: JsonValue::Object {
-                    space0: "".to_string(),
-                    elements: vec![],
-                }
-            }
+            Bytes::Json(JsonValue::Object {
+                space0: "".to_string(),
+                elements: vec![],
+            })
         );
         assert_eq!(reader.state.cursor, 2);
 
@@ -615,12 +605,10 @@ mod tests {
         assert_eq!(b.line_terminators.len(), 1);
         assert_eq!(
             b.value,
-            Bytes::Json {
-                value: JsonValue::Object {
-                    space0: "".to_string(),
-                    elements: vec![],
-                }
-            }
+            Bytes::Json(JsonValue::Object {
+                space0: "".to_string(),
+                elements: vec![],
+            })
         );
         assert_eq!(reader.state.cursor, 24);
 

@@ -133,11 +133,11 @@ impl ToJson for Bytes {
             Bytes::Base64(value) => value.to_json(),
             Bytes::Hex(value) => value.to_json(),
             Bytes::File(value) => value.to_json(),
-            Bytes::Json { value } => JValue::Object(vec![
+            Bytes::Json(value) => JValue::Object(vec![
                 ("type".to_string(), JValue::String("json".to_string())),
                 ("value".to_string(), value.to_json()),
             ]),
-            Bytes::Xml { value } => JValue::Object(vec![
+            Bytes::Xml(value) => JValue::Object(vec![
                 ("type".to_string(), JValue::String("xml".to_string())),
                 ("value".to_string(), JValue::String(value.clone())),
             ]),
@@ -535,6 +535,15 @@ impl ToJson for FilterValue {
             FilterValue::UrlDecode { .. } => {
                 attributes.push(("type".to_string(), JValue::String("urlDecode".to_string())));
             }
+            FilterValue::HtmlEscape { .. } => {
+                attributes.push(("type".to_string(), JValue::String("htmlEscape".to_string())));
+            }
+            FilterValue::HtmlUnescape { .. } => {
+                attributes.push((
+                    "type".to_string(),
+                    JValue::String("htmlUnescape".to_string()),
+                ));
+            }
             FilterValue::ToInt { .. } => {
                 attributes.push(("type".to_string(), JValue::String("toInt".to_string())));
             }
@@ -571,7 +580,7 @@ pub mod tests {
                 method: Method::Get,
                 space1: whitespace(),
                 url: Template {
-                    quotes: false,
+                    delimiter: None,
                     elements: vec![TemplateElement::String {
                         value: "http://example.com".to_string(),
                         encoded: "not_used".to_string(),
@@ -591,7 +600,7 @@ pub mod tests {
                     space1: whitespace(),
                     space2: whitespace(),
                     value: Template {
-                        quotes: false,
+                        delimiter: None,
                         elements: vec![TemplateElement::String {
                             value: "Bar".to_string(),
                             encoded: "unused".to_string(),
@@ -682,7 +691,7 @@ pub mod tests {
             value: QueryValue::Header {
                 space0: whitespace(),
                 name: Template {
-                    quotes: false,
+                    delimiter: None,
                     elements: vec![TemplateElement::String {
                         value: "Content-Length".to_string(),
                         encoded: "10".to_string(),
